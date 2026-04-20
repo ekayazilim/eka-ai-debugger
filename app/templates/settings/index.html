@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block baslik %}Ayarlar Merkezi{% endblock %}
+{% block icerik %}
+<style>
+    .provider-picker-menu {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.18) transparent;
+    }
+    .provider-picker-menu::-webkit-scrollbar {
+        width: 8px;
+    }
+    .provider-picker-menu::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.16);
+        border-radius: 999px;
+    }
+    .provider-picker-option.is-active {
+        background: rgba(255,255,255,0.12);
+        border-color: rgba(255,255,255,0.18);
+    }
+    .provider-picker-option:hover {
+        background: rgba(255,255,255,0.08);
+    }
+</style>
+<div class="space-y-8">
+    <section class="rounded-[2rem] border border-black/5 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(248,245,239,0.86))] shadow-card overflow-hidden"><div class="px-7 lg:px-10 py-8 lg:py-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8"><div class="max-w-2xl"><p class="text-[11px] uppercase tracking-[0.32em] text-black/35 mb-3">Settings Console</p><h3 class="text-3xl lg:text-4xl font-extrabold tracking-tight text-ink">Profil, sağlayıcı, workspace ve sağlık görünümü tek panelde.</h3><p class="mt-4 text-sm lg:text-base text-black/58 leading-7">Çoklu şirket/proje workspace yönetimi, sağlayıcı sağlık istatistikleri ve aylık maliyet özeti eklendi.</p></div><div class="grid grid-cols-2 gap-3 min-w-full lg:min-w-[320px]"><div class="rounded-3xl border border-black/8 bg-white/70 px-5 py-4"><div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Workspace</div><div class="mt-2 text-3xl font-bold text-ink">{{ calisma_alanlari|length }}</div></div><div class="rounded-3xl border border-black/8 bg-white/70 px-5 py-4"><div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Aylık Maliyet</div><div class="mt-2 text-3xl font-bold text-ink">${{ '%.4f'|format(maliyet_ozeti.aylik_maliyet) }}</div></div></div></div></section>
+    {% if mesaj %}<div class="rounded-3xl border border-emerald-300/60 bg-emerald-50/90 px-6 py-4 text-sm font-medium text-emerald-900 shadow-card">{{ mesaj }}</div>{% endif %}
+    {% if hata %}<div class="rounded-3xl border border-red-300/60 bg-red-50/90 px-6 py-4 text-sm font-medium text-red-900 shadow-card">{{ hata }}</div>{% endif %}
+    <div class="grid grid-cols-1 xl:grid-cols-[1.6fr_minmax(340px,0.9fr)] gap-7">
+        <section class="rounded-[2rem] border border-black/5 bg-white/88 shadow-card overflow-hidden"><div class="px-5 lg:px-7 pt-5 border-b border-black/5"><div class="flex flex-wrap gap-2 pb-5" id="settings-tabs"><button type="button" data-tab="profil" class="settings-tab active rounded-2xl px-4 py-2.5 text-sm font-semibold border border-black/10 bg-ink text-white">Profil</button><button type="button" data-tab="guvenlik" class="settings-tab rounded-2xl px-4 py-2.5 text-sm font-semibold border border-black/10 bg-white text-ink">Güvenlik</button><button type="button" data-tab="workspaces" class="settings-tab rounded-2xl px-4 py-2.5 text-sm font-semibold border border-black/10 bg-white text-ink">Workspace</button><button type="button" data-tab="saglayicilar" class="settings-tab rounded-2xl px-4 py-2.5 text-sm font-semibold border border-black/10 bg-white text-ink">Sağlayıcılar</button><button type="button" data-tab="varsayilan" class="settings-tab rounded-2xl px-4 py-2.5 text-sm font-semibold border border-black/10 bg-white text-ink">Varsayılan Profil</button></div></div><div class="p-7"><div data-panel="profil" class="settings-panel space-y-6"><form action="/ayarlar/profil" method="POST" class="rounded-[1.6rem] border border-black/6 bg-panel p-5 space-y-4 max-w-2xl"><div><label class="block text-sm font-semibold text-ink mb-2">Ad Soyad</label><input type="text" name="ad_soyad" value="{{ kullanici.ad_soyad }}" required class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm"></div><div><label class="block text-sm font-semibold text-ink mb-2">E-posta</label><input type="email" name="eposta" value="{{ kullanici.eposta }}" required class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm"></div><button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-black">Profili kaydet</button></form></div><div data-panel="guvenlik" class="settings-panel hidden space-y-6"><form action="/ayarlar/sifre" method="POST" class="rounded-[1.6rem] border border-black/6 bg-white p-5 space-y-4 max-w-2xl"><input type="password" name="mevcut_sifre" placeholder="Mevcut şifre" required class="w-full rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="password" name="yeni_sifre" placeholder="Yeni şifre" required class="w-full rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm"><input type="password" name="yeni_sifre_tekrar" placeholder="Yeni şifre tekrar" required class="w-full rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm"></div><button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-black/12 px-5 py-3 text-sm font-semibold text-ink hover:bg-black/[0.03]">Şifreyi güncelle</button></form></div><div data-panel="workspaces" class="settings-panel hidden space-y-5"><form action="/ayarlar/workspaces" method="POST" class="rounded-[1.6rem] border border-black/6 bg-panel p-5 space-y-4"><input type="text" name="isim" placeholder="Yeni çalışma alanı adı" required class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm"><textarea name="aciklama" rows="3" placeholder="Açıklama" class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm"></textarea><button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-black">Workspace oluştur</button></form><form action="/ayarlar/workspaces/sec" method="POST" class="rounded-[1.6rem] border border-black/6 bg-white p-5 space-y-4"><select name="calisma_alani_id" class="w-full rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">{% for alan in calisma_alanlari %}<option value="{{ alan.id }}" {% if aktif_calisma_alani and aktif_calisma_alani.id == alan.id %}selected{% endif %}>{{ alan.isim }}</option>{% endfor %}</select><button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-black/12 px-5 py-3 text-sm font-semibold text-ink hover:bg-black/[0.03]">Aktif workspace seç</button></form></div><div data-panel="saglayicilar" class="settings-panel hidden space-y-5">{% if saglayicilar %}{% for saglayici in saglayicilar %}{% set saglik = saglayici_sagliklari.get(saglayici.id, {}) %}<article class="rounded-[1.7rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#faf7f2)] p-6"><div class="flex flex-col gap-4"><div class="flex flex-wrap items-center gap-2.5"><h4 class="text-lg font-bold tracking-tight text-ink">{{ saglayici.gosterim_adi }}</h4><span class="inline-flex items-center rounded-full border border-black/8 bg-black/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">{{ saglayici_tipleri[saglayici.saglayici_tipi]['etiket'] }}</span></div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm"><div class="rounded-2xl border border-black/6 bg-white/72 p-4"><div class="text-[11px] uppercase tracking-[0.22em] text-black/35 mb-1">Başarı</div><div class="font-semibold text-ink">{{ saglik.basari_orani or 0 }}%</div></div><div class="rounded-2xl border border-black/6 bg-white/72 p-4"><div class="text-[11px] uppercase tracking-[0.22em] text-black/35 mb-1">Gecikme</div><div class="font-semibold text-ink">{{ saglik.ortalama_gecikme or 0 }} ms</div></div><div class="rounded-2xl border border-black/6 bg-white/72 p-4"><div class="text-[11px] uppercase tracking-[0.22em] text-black/35 mb-1">İstek</div><div class="font-semibold text-ink">{{ saglik.istek_sayisi or 0 }}</div></div><div class="rounded-2xl border border-black/6 bg-white/72 p-4"><div class="text-[11px] uppercase tracking-[0.22em] text-black/35 mb-1">Maliyet</div><div class="font-semibold text-ink">${{ '%.4f'|format(saglik.aylik_maliyet or 0) }}</div></div></div><div class="flex flex-wrap gap-2"><a href="/ayarlar?duzenle={{ saglayici.id }}" class="inline-flex items-center rounded-2xl border border-black/12 bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:bg-black/[0.03]">Düzenle</a><form action="/ayarlar/saglayicilar/{{ saglayici.id }}/test" method="POST"><button type="submit" class="inline-flex items-center rounded-2xl border border-black/12 bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:bg-black/[0.03]">Test et</button></form></div></div></article>{% endfor %}{% endif %}</div><div data-panel="varsayilan" class="settings-panel hidden space-y-6"><form action="/ayarlar/tercihler" method="POST" class="rounded-[1.6rem] border border-black/6 bg-panel p-5 grid grid-cols-1 lg:grid-cols-3 gap-4 items-end"><div><label class="block text-sm font-semibold text-ink mb-2">Aktif sağlayıcı</label><select name="secili_saglayici_id" id="secili_saglayici_id" class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm">{% for saglayici in saglayicilar %}<option value="{{ saglayici.id }}" {% if ayar.secili_saglayici_id == saglayici.id %}selected{% endif %}>{{ saglayici.gosterim_adi }}</option>{% endfor %}</select></div><div><label class="block text-sm font-semibold text-ink mb-2">Aktif model</label><select name="secili_model" id="secili_model" class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm">{% if aktif_model_listesi %}{% for model in aktif_model_listesi %}<option value="{{ model }}" {% if ayar.secili_model == model %}selected{% endif %}>{{ model }}</option>{% endfor %}{% else %}<option value="">Önce sağlayıcı test et</option>{% endif %}</select></div><div><button type="submit" class="w-full inline-flex items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-black">Varsayılan profili kaydet</button></div></form></div></div></section><aside><section class="rounded-[2rem] border border-black/5 bg-[linear-gradient(180deg,#1a1d21,#111315)] text-white shadow-card overflow-hidden sticky top-8"><div class="px-7 py-6 border-b border-white/10"><h3 class="text-2xl font-bold tracking-tight">{{ 'Sağlayıcıyı düzenle' if duzenlenen_saglayici else 'Yeni sağlayıcı ekle' }}</h3></div><form method="POST" action="{% if duzenlenen_saglayici %}/ayarlar/saglayicilar/{{ duzenlenen_saglayici.id }}/guncelle{% else %}/ayarlar/saglayicilar{% endif %}" class="p-7 space-y-5" id="provider-form"><div class="space-y-2.5" id="provider-picker-root"><input type="hidden" name="saglayici_tipi" id="saglayici_tipi" value="{% if duzenlenen_saglayici %}{{ duzenlenen_saglayici.saglayici_tipi }}{% else %}{{ saglayici_tipleri.keys()|list|first }}{% endif %}"><label class="block text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">Sağlayıcı tipi</label><div class="relative"><button type="button" id="provider-picker-button" class="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-white transition hover:border-white/20 hover:bg-white/10"><span class="flex min-w-0 flex-col"><span id="provider-picker-label" class="font-semibold leading-5">{% if duzenlenen_saglayici %}{{ saglayici_tipleri[duzenlenen_saglayici.saglayici_tipi]['etiket'] }}{% else %}{{ saglayici_tipleri[saglayici_tipleri.keys()|list|first]['etiket'] }}{% endif %}</span><span id="provider-picker-hint" class="mt-1 text-xs text-white/38">Canl? ba?lant? ve model senkronizasyonu desteklenir.</span></span><i class="fa-solid fa-chevron-down text-xs text-white/55 transition" id="provider-picker-icon"></i></button><div id="provider-picker-menu" class="provider-picker-menu absolute left-0 right-0 top-[calc(100%+0.65rem)] z-30 hidden max-h-80 overflow-y-auto rounded-[1.6rem] border border-white/10 bg-[#171a1d] p-2 shadow-2xl shadow-black/35">{% for key, tip in saglayici_tipleri.items() %}<button type="button" class="provider-picker-option flex w-full items-start justify-between rounded-2xl border border-transparent px-4 py-3 text-left text-white/88 transition" data-value="{{ key }}" data-base-url="{{ tip['varsayilan_base_url'] }}" data-label="{{ tip['etiket'] }}"><span><span class="block text-sm font-semibold leading-5">{{ tip['etiket'] }}</span><span class="mt-1 block text-xs text-white/38">{{ tip['varsayilan_base_url'] or 'Özel yapılandırma ile kullanılabilir' }}</span></span><span class="mt-0.5 text-[10px] uppercase tracking-[0.24em] text-white/28">{{ key }}</span></button>{% endfor %}</div></div></div><input type="text" name="gosterim_adi" value="{{ duzenlenen_saglayici.gosterim_adi if duzenlenen_saglayici else '' }}" required placeholder="Görünüm adı" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30"><div id="base-url-wrapper"><input type="text" name="base_url" id="base_url" value="{{ duzenlenen_saglayici.base_url if duzenlenen_saglayici else '' }}" placeholder="Base URL" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30"></div><input type="password" name="api_key" placeholder="{% if duzenlenen_saglayici and duzenlenen_saglayici.api_key_masked %}{{ duzenlenen_saglayici.api_key_masked }}{% else %}API anahtarı{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30"><input list="provider-models" name="varsayilan_model" value="{{ duzenlenen_saglayici.varsayilan_model if duzenlenen_saglayici else '' }}" placeholder="Varsayılan model" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30"><datalist id="provider-models">{% for model in duzenlenen_modeller %}<option value="{{ model }}"></option>{% endfor %}</datalist><button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-ink hover:bg-mist">{{ 'Güncelle ve test et' if duzenlenen_saglayici else 'Ekle ve test et' }}</button></form></section></aside></div>
+</div>
+<script>
+const providerInput=document.getElementById('saglayici_tipi');
+const providerPickerButton=document.getElementById('provider-picker-button');
+const providerPickerMenu=document.getElementById('provider-picker-menu');
+const providerPickerLabel=document.getElementById('provider-picker-label');
+const providerPickerHint=document.getElementById('provider-picker-hint');
+const providerPickerIcon=document.getElementById('provider-picker-icon');
+const providerOptions=document.querySelectorAll('.provider-picker-option');
+const baseUrlInput=document.getElementById('base_url');
+const baseUrlWrapper=document.getElementById('base-url-wrapper');
+const tabButtons=document.querySelectorAll('.settings-tab');
+const tabPanels=document.querySelectorAll('.settings-panel');
+const defaultProviderSelect=document.getElementById('secili_saglayici_id');
+const defaultModelSelect=document.getElementById('secili_model');
+const providerModelMap={{ saglayici_model_haritasi|tojson }};
+const selectedModelValue={{ (ayar.secili_model or '')|tojson }};
+
+function activeProviderOption(){
+    return Array.from(providerOptions).find((option)=>option.dataset.value===providerInput.value) || providerOptions[0] || null;
+}
+
+function closeProviderMenu(){
+    if(!providerPickerMenu||!providerPickerButton||!providerPickerIcon){return;}
+    providerPickerMenu.classList.add('hidden');
+    providerPickerButton.setAttribute('aria-expanded','false');
+    providerPickerIcon.classList.remove('rotate-180');
+}
+
+function openProviderMenu(){
+    if(!providerPickerMenu||!providerPickerButton||!providerPickerIcon){return;}
+    providerPickerMenu.classList.remove('hidden');
+    providerPickerButton.setAttribute('aria-expanded','true');
+    providerPickerIcon.classList.add('rotate-180');
+}
+
+function syncProviderFields(){
+    if(!providerInput){return;}
+    const selected=activeProviderOption();
+    const providerType=providerInput.value;
+    const defaultBaseUrl=selected?selected.dataset.baseUrl:'';
+    const requiresBaseUrl=providerType==='cloudflare'||providerType==='custom_openai';
+    if(providerPickerLabel&&selected){
+        providerPickerLabel.textContent=selected.dataset.label;
+    }
+    if(providerPickerHint){
+        providerPickerHint.textContent=defaultBaseUrl||'Özel yapılandırma ile kullanılabilir';
+    }
+    providerOptions.forEach((option)=>{
+        option.classList.toggle('is-active',option.dataset.value===providerType);
+    });
+    baseUrlWrapper.style.display=providerType==='anthropic'?'none':'block';
+    if(baseUrlInput){
+        if(!baseUrlInput.value){
+            baseUrlInput.value=defaultBaseUrl||'';
+        }
+        baseUrlInput.required=requiresBaseUrl;
+    }
+}
+
+function activateTab(tabName){
+    tabButtons.forEach((button)=>{
+        const active=button.dataset.tab===tabName;
+        button.classList.toggle('bg-ink',active);
+        button.classList.toggle('text-white',active);
+        button.classList.toggle('bg-white',!active);
+        button.classList.toggle('text-ink',!active);
+    });
+    tabPanels.forEach((panel)=>{
+        panel.classList.toggle('hidden',panel.dataset.panel!==tabName);
+    });
+}
+
+function syncDefaultModelOptions(){
+    if(!defaultProviderSelect||!defaultModelSelect){return;}
+    const providerId=defaultProviderSelect.value;
+    const models=providerModelMap[providerId]||[];
+    const preferredValue=defaultModelSelect.dataset.userValue||defaultModelSelect.value||selectedModelValue||'';
+    defaultModelSelect.innerHTML='';
+    if(models.length){
+        models.forEach((model)=>{
+            const option=document.createElement('option');
+            option.value=model;
+            option.textContent=model;
+            if(model===preferredValue){
+                option.selected=true;
+            }
+            defaultModelSelect.appendChild(option);
+        });
+        if(!defaultModelSelect.value&&models[0]){
+            defaultModelSelect.value=models[0];
+        }
+    }else{
+        const option=document.createElement('option');
+        option.value='';
+        option.textContent='Önce sağlayıcı test et';
+        option.selected=true;
+        defaultModelSelect.appendChild(option);
+    }
+}
+
+tabButtons.forEach((button)=>{
+    button.addEventListener('click',()=>activateTab(button.dataset.tab));
+});
+
+if(defaultModelSelect){
+    defaultModelSelect.dataset.userValue=defaultModelSelect.value||selectedModelValue||'';
+    defaultModelSelect.addEventListener('change',()=>{
+        defaultModelSelect.dataset.userValue=defaultModelSelect.value;
+    });
+}
+
+if(defaultProviderSelect){
+    defaultProviderSelect.addEventListener('change',()=>{
+        if(defaultModelSelect){
+            defaultModelSelect.dataset.userValue='';
+        }
+        syncDefaultModelOptions();
+    });
+    syncDefaultModelOptions();
+}
+
+if(providerPickerButton&&providerPickerMenu&&providerInput){
+    providerPickerButton.addEventListener('click',()=>{
+        if(providerPickerMenu.classList.contains('hidden')){
+            openProviderMenu();
+        }else{
+            closeProviderMenu();
+        }
+    });
+    providerOptions.forEach((option)=>{
+        option.addEventListener('click',()=>{
+            providerInput.value=option.dataset.value;
+            if(baseUrlInput){
+                baseUrlInput.value='';
+            }
+            syncProviderFields();
+            closeProviderMenu();
+        });
+    });
+    document.addEventListener('click',(event)=>{
+        if(!event.target.closest('#provider-picker-root')){
+            closeProviderMenu();
+        }
+    });
+    document.addEventListener('keydown',(event)=>{
+        if(event.key==='Escape'){
+            closeProviderMenu();
+        }
+    });
+    syncProviderFields();
+}
+
+activateTab("{% if duzenlenen_saglayici %}saglayicilar{% else %}profil{% endif %}");
+</script>
+{% endblock %}

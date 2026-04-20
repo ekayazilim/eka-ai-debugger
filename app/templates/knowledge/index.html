@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block baslik %}Bilgi Tabanı{% endblock %}
+{% block icerik %}
+<style>
+    .knowledge-editor select option {
+        color: #111315;
+        background: #ffffff;
+    }
+</style>
+<div class="space-y-8">
+    <section class="rounded-[2rem] border border-black/5 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(248,245,239,0.86))] shadow-card overflow-hidden">
+        <div class="px-7 lg:px-10 py-8 lg:py-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div class="max-w-2xl">
+                <p class="text-[11px] uppercase tracking-[0.32em] text-black/35 mb-3">Knowledge Base</p>
+                <h3 class="text-3xl lg:text-4xl font-extrabold tracking-tight text-ink">Çözüm bilgisini kalıcı ve düzenlenebilir hale getir.</h3>
+                <p class="mt-4 text-sm lg:text-base text-black/58 leading-7">Artık bilgi tabanına kayıt ekleyebilir, güncelleyebilir, silebilir ve çalışma alanına göre organize edebilirsin.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 min-w-full lg:min-w-[320px]">
+                <div class="rounded-3xl border border-black/8 bg-white/70 px-5 py-4">
+                    <div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Toplam Kayıt</div>
+                    <div class="mt-2 text-3xl font-bold text-ink">{{ kayitlar|length }}</div>
+                </div>
+                <div class="rounded-3xl border border-black/8 bg-white/70 px-5 py-4">
+                    <div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Aktif Workspace</div>
+                    <div class="mt-2 text-lg font-bold text-ink">{{ aktif_calisma_alani.isim if aktif_calisma_alani else 'Seçilmedi' }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if mesaj %}<div class="rounded-3xl border border-emerald-300/60 bg-emerald-50/90 px-6 py-4 text-sm font-medium text-emerald-900 shadow-card">{{ mesaj }}</div>{% endif %}
+    {% if hata %}<div class="rounded-3xl border border-red-300/60 bg-red-50/90 px-6 py-4 text-sm font-medium text-red-900 shadow-card">{{ hata }}</div>{% endif %}
+
+    <div class="grid grid-cols-1 xl:grid-cols-[1.45fr_minmax(360px,0.95fr)] gap-7">
+        <section class="rounded-[2rem] border border-black/5 bg-white/88 shadow-card overflow-hidden">
+            <form method="GET" action="/bilgi-tabani" class="px-7 py-6 border-b border-black/5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                <input type="text" name="q" value="{{ filtreler.q }}" placeholder="Başlık, içerik, etiket ara" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm xl:col-span-2">
+                <select name="workspace" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+                    <option value="">Tüm çalışma alanları</option>
+                    {% for alan in calisma_alanlari %}
+                    <option value="{{ alan.id }}" {% if filtreler.workspace == alan.id %}selected{% endif %}>{{ alan.isim }}</option>
+                    {% endfor %}
+                </select>
+                <select name="durum" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+                    <option value="">Tüm durumlar</option>
+                    <option value="taslak" {% if filtreler.durum == 'taslak' %}selected{% endif %}>Taslak</option>
+                    <option value="yayinlandi" {% if filtreler.durum == 'yayinlandi' %}selected{% endif %}>Yayınlandı</option>
+                    <option value="arsiv" {% if filtreler.durum == 'arsiv' %}selected{% endif %}>Arşiv</option>
+                </select>
+                <select name="kategori" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+                    <option value="">Tüm kategoriler</option>
+                    {% for kategori in kategoriler %}
+                    <option value="{{ kategori }}" {% if filtreler.kategori == kategori %}selected{% endif %}>{{ kategori }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-black">Filtrele</button>
+            </form>
+
+            {% if kayitlar %}
+            <div class="divide-y divide-black/5">
+                {% for kayit in kayitlar %}
+                <article class="px-7 py-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <h4 class="text-lg font-bold tracking-tight text-ink">{{ kayit.baslik }}</h4>
+                            <span class="inline-flex items-center rounded-full border border-black/8 bg-black/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">{{ kayit.durum }}</span>
+                            {% if kayit.kategori %}<span class="inline-flex items-center rounded-full border border-black/8 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">{{ kayit.kategori }}</span>{% endif %}
+                        </div>
+                        <p class="mt-2 text-sm leading-7 text-black/58">{{ kayit.ozet or kayit.icerik[:220] ~ ('...' if kayit.icerik|length > 220 else '') }}</p>
+                        <div class="mt-3 flex flex-wrap gap-4 text-xs text-black/42">
+                            <span>{{ kayit.calisma_alani.isim if kayit.calisma_alani else 'Genel alan' }}</span>
+                            <span>{{ kayit.guncellenme_tarihi.strftime('%Y-%m-%d %H:%M') }}</span>
+                            {% if kayit.etiketler_metin %}<span>{{ kayit.etiketler_metin }}</span>{% endif %}
+                            {% if kayit.kaynak_oturum_id %}<span>Oturum #{{ kayit.kaynak_oturum_id }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 shrink-0">
+                        <a href="/bilgi-tabani?duzenle={{ kayit.id }}" class="inline-flex items-center rounded-2xl border border-black/12 bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:bg-black/[0.03]">Düzenle</a>
+                        <form method="POST" action="/bilgi-tabani/{{ kayit.id }}/sil" onsubmit="return confirm('Bu bilgi tabanı kaydı silinsin mi?');">
+                            <button type="submit" class="inline-flex items-center rounded-2xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100">Sil</button>
+                        </form>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="px-7 py-16 text-center">
+                <h4 class="text-xl font-bold tracking-tight text-ink">Henüz bilgi tabanı kaydı yok</h4>
+                <p class="mt-2 text-sm text-black/52">Sağ panelden ilk kaydını oluşturarak tekrar kullanılabilir çözümler biriktirebilirsin.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <aside>
+            <section class="rounded-[2rem] border border-black/5 bg-[linear-gradient(180deg,#1a1d21,#111315)] text-white shadow-card overflow-hidden sticky top-8">
+                <div class="px-7 py-6 border-b border-white/10">
+                    <p class="text-[11px] uppercase tracking-[0.28em] text-white/40 mb-2">Knowledge Editor</p>
+                    <h3 class="text-2xl font-bold tracking-tight">{{ 'Kaydı düzenle' if duzenlenen_kayit else 'Yeni kayıt ekle' }}</h3>
+                </div>
+                <form method="POST" action="{% if duzenlenen_kayit %}/bilgi-tabani/{{ duzenlenen_kayit.id }}/guncelle{% else %}/bilgi-tabani/{% endif %}" class="knowledge-editor p-7 space-y-4">
+                    <input type="text" name="baslik" value="{{ duzenlenen_kayit.baslik if duzenlenen_kayit else '' }}" required placeholder="Başlık" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="text" name="kategori" value="{{ duzenlenen_kayit.kategori if duzenlenen_kayit and duzenlenen_kayit.kategori else '' }}" placeholder="Kategori" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30">
+                        <select name="durum" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
+                            {% set secili_durum = duzenlenen_kayit.durum if duzenlenen_kayit else 'taslak' %}
+                            <option value="taslak" {% if secili_durum == 'taslak' %}selected{% endif %}>Taslak</option>
+                            <option value="yayinlandi" {% if secili_durum == 'yayinlandi' %}selected{% endif %}>Yayınlandı</option>
+                            <option value="arsiv" {% if secili_durum == 'arsiv' %}selected{% endif %}>Arşiv</option>
+                        </select>
+                    </div>
+                    <input type="text" name="etiketler" value="{{ duzenlenen_kayit.etiketler_metin if duzenlenen_kayit and duzenlenen_kayit.etiketler_metin else '' }}" placeholder="Etiketler (virgülle)" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30">
+                    <select name="calisma_alani_id" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
+                        <option value="">Genel kayıt</option>
+                        {% for alan in calisma_alanlari %}
+                        <option value="{{ alan.id }}" {% if duzenlenen_kayit and duzenlenen_kayit.calisma_alani_id == alan.id %}selected{% elif not duzenlenen_kayit and aktif_calisma_alani and aktif_calisma_alani.id == alan.id %}selected{% endif %}>{{ alan.isim }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="kaynak_oturum_id" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
+                        <option value="">Bağlı oturum seçme</option>
+                        {% for oturum in bagli_oturumlar %}
+                        <option value="{{ oturum.id }}" {% if duzenlenen_kayit and duzenlenen_kayit.kaynak_oturum_id == oturum.id %}selected{% endif %}>#{{ oturum.id }} · {{ oturum.baslik }}</option>
+                        {% endfor %}
+                    </select>
+                    <textarea name="ozet" rows="3" placeholder="Kısa özet" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30">{{ duzenlenen_kayit.ozet if duzenlenen_kayit and duzenlenen_kayit.ozet else '' }}</textarea>
+                    <textarea name="icerik" rows="12" required placeholder="Detaylı çözüm, notlar, standartlar" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30">{{ duzenlenen_kayit.icerik if duzenlenen_kayit else '' }}</textarea>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-ink hover:bg-mist">{{ 'Kaydı güncelle' if duzenlenen_kayit else 'Kaydı oluştur' }}</button>
+                        {% if duzenlenen_kayit %}
+                        <a href="/bilgi-tabani" class="inline-flex items-center justify-center rounded-2xl border border-white/12 px-5 py-3 text-sm font-semibold text-white hover:bg-white/5">Yeni kayıt moduna dön</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </section>
+        </aside>
+    </div>
+</div>
+{% endblock %}

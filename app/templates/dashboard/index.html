@@ -1,0 +1,37 @@
+﻿{% extends "base.html" %}
+{% block baslik %}Genel Bakış{% endblock %}
+{% block icerik %}
+<div class="space-y-8">
+    <section class="rounded-[2rem] border border-black/5 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(248,245,239,0.86))] shadow-card overflow-hidden">
+        <div class="px-7 lg:px-10 py-8 lg:py-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div class="max-w-2xl">
+                <p class="text-[11px] uppercase tracking-[0.32em] text-black/35 mb-3">Overview</p>
+                <h3 class="text-3xl lg:text-4xl font-extrabold tracking-tight text-ink">{{ aktif_calisma_alani.isim if aktif_calisma_alani else 'Varsayılan çalışma alanı' }} için operasyon görünümü.</h3>
+                <p class="mt-4 text-sm lg:text-base text-black/58 leading-7">Aktif çalışma alanı, son oturumlar ve yaklaşık aylık maliyet aynı panelde toplanır.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 min-w-full lg:min-w-[360px]">
+                <div class="rounded-3xl border border-black/8 bg-white/70 px-5 py-4"><div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Toplam</div><div class="mt-2 text-3xl font-bold text-ink">{{ istatistikler.toplam }}</div></div>
+                <div class="rounded-3xl border border-black/8 bg-white/70 px-5 py-4"><div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Aylık Maliyet</div><div class="mt-2 text-3xl font-bold text-ink">${{ '%.4f'|format(maliyet_ozeti.aylik_maliyet) }}</div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <article class="rounded-[1.8rem] border border-black/5 bg-white/88 shadow-card p-6"><div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Çözülen</div><div class="mt-4 text-4xl font-extrabold text-ink">{{ istatistikler.cozulen }}</div></article>
+        <article class="rounded-[1.8rem] border border-black/5 bg-white/88 shadow-card p-6"><div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Bekleyen</div><div class="mt-4 text-4xl font-extrabold text-ink">{{ istatistikler.bekleyen }}</div></article>
+        <article class="rounded-[1.8rem] border border-black/5 bg-white/88 shadow-card p-6"><div class="text-[11px] uppercase tracking-[0.24em] text-black/35">Çalışma Alanları</div><div class="mt-4 text-4xl font-extrabold text-ink">{{ calisma_alanlari|length }}</div></article>
+    </section>
+
+    <section class="rounded-[2rem] border border-black/5 bg-white/88 shadow-card overflow-hidden">
+        <div class="px-7 py-6 border-b border-black/5 flex items-center justify-between gap-4">
+            <div><p class="text-[11px] uppercase tracking-[0.24em] text-black/35 mb-2">Recent Sessions</p><h3 class="text-xl font-bold tracking-tight text-ink">Son oturumlar</h3></div>
+            <a href="/oturumlar" class="inline-flex items-center justify-center rounded-2xl border border-black/12 bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-black/[0.03]">Arşive git</a>
+        </div>
+        {% if oturumlar %}
+        <div class="overflow-x-auto"><table class="w-full text-sm text-left text-black/66"><thead class="text-[11px] uppercase tracking-[0.2em] text-black/38 bg-black/[0.02] border-b border-black/5"><tr><th class="px-7 py-4">Başlık</th><th class="px-7 py-4">Etiketler</th><th class="px-7 py-4">Sağlayıcı</th><th class="px-7 py-4">Maliyet</th><th class="px-7 py-4 text-right">İşlem</th></tr></thead><tbody class="divide-y divide-black/5">{% for oturum in oturumlar %}<tr><td class="px-7 py-5"><div class="font-semibold text-ink">{{ oturum.baslik }}</div><div class="mt-1 text-xs text-black/42">{{ oturum.olusturulma_tarihi.strftime('%Y-%m-%d %H:%M') }}</div></td><td class="px-7 py-5">{{ oturum.etiketler_metin or '-' }}</td><td class="px-7 py-5">{{ oturum.secilen_saglayici or '-' }}</td><td class="px-7 py-5">${{ '%.4f'|format(oturum.tahmini_maliyet or 0) }}</td><td class="px-7 py-5 text-right"><a href="/oturumlar/detay/{{ oturum.id }}" class="inline-flex items-center justify-center rounded-2xl border border-black/12 bg-white px-4 py-2 text-xs font-semibold text-ink hover:bg-black/[0.03]">Detay</a></td></tr>{% endfor %}</tbody></table></div>
+        {% else %}
+        <div class="px-7 py-16 text-center"><h4 class="text-xl font-bold tracking-tight text-ink">Henüz oturum yok</h4><p class="mt-2 text-sm text-black/52">İlk çoklu dosya analizini başlatmak için yeni oturum oluştur.</p></div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

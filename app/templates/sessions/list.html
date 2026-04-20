@@ -1,0 +1,95 @@
+﻿{% extends "base.html" %}
+{% block baslik %}Tüm Oturumlar{% endblock %}
+{% block icerik %}
+<div class="space-y-8">
+    <section class="rounded-[2rem] border border-black/5 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(248,245,239,0.86))] shadow-card overflow-hidden">
+        <div class="px-7 lg:px-10 py-8 lg:py-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div class="max-w-2xl">
+                <p class="text-[11px] uppercase tracking-[0.32em] text-black/35 mb-3">Session Archive</p>
+                <h3 class="text-3xl lg:text-4xl font-extrabold tracking-tight text-ink">Arama ve filtreleme ile güçlü oturum arşivi.</h3>
+                <p class="mt-4 text-sm lg:text-base text-black/58 leading-7">Dil, tarih, durum, sağlayıcı, model, çalışma alanı ve etiket kırılımlarına göre arama yapabilirsin.</p>
+            </div>
+            <a href="/oturumlar/yeni" class="inline-flex items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-black">Yeni oturum</a>
+        </div>
+    </section>
+
+    <section class="rounded-[2rem] border border-black/5 bg-white/88 shadow-card overflow-hidden">
+        <form method="GET" action="/oturumlar" class="px-7 py-6 border-b border-black/5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-3">
+            <input type="text" name="q" value="{{ filtreler.q }}" placeholder="Kod, log, rapor ara" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm xl:col-span-2">
+            <select name="workspace" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+                <option value="">Tüm çalışma alanları</option>
+                {% for alan in calisma_alanlari %}
+                <option value="{{ alan.id }}" {% if filtreler.workspace == alan.id %}selected{% endif %}>{{ alan.isim }}</option>
+                {% endfor %}
+            </select>
+            <select name="dil" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+                <option value="">Tüm diller</option>
+                {% for dil_degeri in diller %}
+                <option value="{{ dil_degeri }}" {% if filtreler.dil == dil_degeri %}selected{% endif %}>{{ dil_degeri }}</option>
+                {% endfor %}
+            </select>
+            <select name="durum" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+                <option value="">Tüm durumlar</option>
+                <option value="bekliyor" {% if filtreler.durum == 'bekliyor' %}selected{% endif %}>Bekliyor</option>
+                <option value="tamamlandi" {% if filtreler.durum == 'tamamlandi' %}selected{% endif %}>Tamamlandı</option>
+                <option value="hata_olustu" {% if filtreler.durum == 'hata_olustu' %}selected{% endif %}>Hata</option>
+            </select>
+            <select name="saglayici" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+                <option value="">Tüm sağlayıcılar</option>
+                {% for saglayici in saglayicilar %}
+                <option value="{{ saglayici }}" {% if filtreler.saglayici == saglayici %}selected{% endif %}>{{ saglayici }}</option>
+                {% endfor %}
+            </select>
+            <select name="model" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm xl:col-span-2">
+                <option value="">Tüm modeller</option>
+                {% for model in modeller %}
+                <option value="{{ model }}" {% if filtreler.model == model %}selected{% endif %}>{{ model }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="etiket" value="{{ filtreler.etiket }}" placeholder="Etiket ara" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+            <input type="date" name="tarih_baslangic" value="{{ filtreler.tarih_baslangic }}" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+            <input type="date" name="tarih_bitis" value="{{ filtreler.tarih_bitis }}" class="rounded-2xl border border-black/10 bg-panel px-4 py-3 text-sm">
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-black">Filtrele</button>
+        </form>
+
+        {% if oturumlar %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-black/66">
+                <thead class="text-[11px] uppercase tracking-[0.2em] text-black/38 bg-black/[0.02] border-b border-black/5">
+                    <tr>
+                        <th class="px-7 py-4">Başlık</th>
+                        <th class="px-7 py-4">Çalışma Alanı</th>
+                        <th class="px-7 py-4">Sağlayıcı</th>
+                        <th class="px-7 py-4">Model</th>
+                        <th class="px-7 py-4">Etiket</th>
+                        <th class="px-7 py-4">Maliyet</th>
+                        <th class="px-7 py-4 text-right">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-black/5">
+                    {% for oturum in oturumlar %}
+                    <tr>
+                        <td class="px-7 py-5">
+                            <div class="font-semibold text-ink">{{ oturum.baslik }}</div>
+                            <div class="mt-1 text-xs text-black/42">{{ oturum.olusturulma_tarihi.strftime('%Y-%m-%d %H:%M') }} · {{ oturum.durum }}</div>
+                        </td>
+                        <td class="px-7 py-5">{{ oturum.calisma_alani.isim }}</td>
+                        <td class="px-7 py-5">{{ oturum.secilen_saglayici or '-' }}</td>
+                        <td class="px-7 py-5 max-w-[220px] truncate">{{ oturum.secilen_model or '-' }}</td>
+                        <td class="px-7 py-5">{{ oturum.etiketler_metin or '-' }}</td>
+                        <td class="px-7 py-5">${{ '%.4f'|format(oturum.tahmini_maliyet or 0) }}</td>
+                        <td class="px-7 py-5 text-right"><a href="/oturumlar/detay/{{ oturum.id }}" class="inline-flex items-center justify-center rounded-2xl border border-black/12 bg-white px-4 py-2 text-xs font-semibold text-ink hover:bg-black/[0.03]">Detay</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-7 py-16 text-center">
+            <h4 class="text-xl font-bold tracking-tight text-ink">Aramana uygun oturum bulunamadı</h4>
+            <p class="mt-2 text-sm text-black/52">Filtreleri temizleyip tekrar deneyebilirsin.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

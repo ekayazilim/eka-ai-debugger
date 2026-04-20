@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eka AI Debugger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#111315',
+                        graphite: '#1b1d21',
+                        mist: '#f3f1ec',
+                        panel: '#fbfaf7',
+                        line: '#d8d2c8',
+                        sand: '#c6b79d'
+                    },
+                    boxShadow: {
+                        shell: '0 24px 80px rgba(17, 19, 21, 0.08)',
+                        card: '0 18px 48px rgba(17, 19, 21, 0.06)'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            color-scheme: light;
+        }
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(198, 183, 157, 0.18), transparent 28%),
+                linear-gradient(180deg, #f7f4ee 0%, #f3f1ec 48%, #eeebe4 100%);
+        }
+        .sidebar-link {
+            transition: all 0.22s ease;
+            border-radius: 1rem;
+        }
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #f8f6f1;
+            transform: translateX(2px);
+        }
+        .sidebar-link.active {
+            background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(198,183,157,0.18));
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .app-grid {
+            background-image:
+                linear-gradient(rgba(17,19,21,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(17,19,21,0.035) 1px, transparent 1px);
+            background-size: 28px 28px;
+            background-position: -1px -1px;
+        }
+    </style>
+</head>
+<body class="text-ink antialiased min-h-screen">
+    <div class="min-h-screen lg:p-4">
+        <div class="min-h-screen lg:min-h-[calc(100vh-2rem)] lg:rounded-[2rem] lg:border lg:border-black/5 bg-white/35 backdrop-blur-sm shadow-shell flex overflow-hidden">
+            {% if kullanici %}
+            <aside class="w-72 bg-graphite text-white flex-col hidden lg:flex">
+                <div class="px-7 py-7 border-b border-white/10">
+                    <div class="flex items-center gap-3">
+                        <div class="h-12 w-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-sand text-lg">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-[0.32em] text-white/45">Control Room</p>
+                            <h1 class="text-xl font-bold tracking-tight">Eka Debugger</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 px-4 py-6 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]">
+                    <p class="px-3 text-[11px] uppercase tracking-[0.28em] text-white/35 mb-3">Navigation</p>
+                    <div class="space-y-1.5">
+                        <a href="/pano" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium text-white/72">
+                            <i class="fa-solid fa-chart-column w-5 mr-3"></i> Pano
+                        </a>
+                        <a href="/oturumlar/yeni" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium text-white/72">
+                            <i class="fa-solid fa-square-plus w-5 mr-3"></i> Yeni Oturum
+                        </a>
+                        <a href="/oturumlar" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium text-white/72">
+                            <i class="fa-solid fa-rectangle-list w-5 mr-3"></i> Tüm Oturumlar
+                        </a>
+                        <a href="/bilgi-tabani" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium text-white/72">
+                            <i class="fa-solid fa-book-open w-5 mr-3"></i> Bilgi Tabanı
+                        </a>
+                        <a href="/ayarlar" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium text-white/72">
+                            <i class="fa-solid fa-sliders w-5 mr-3"></i> Ayarlar
+                        </a>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-white/10">
+                    <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="h-11 w-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-sm font-bold text-white">
+                                {{ kullanici.ad_soyad[0] }}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-white truncate">{{ kullanici.ad_soyad }}</p>
+                                <p class="text-xs text-white/45 truncate">{{ kullanici.eposta }}</p>
+                            </div>
+                        </div>
+                        <a href="/yetkilendirme/cikis" class="mt-4 inline-flex items-center text-xs font-semibold tracking-wide text-sand hover:text-white transition-colors">
+                            Oturumu Kapat
+                        </a>
+                    </div>
+                </div>
+            </aside>
+            {% endif %}
+            <main class="flex-1 flex flex-col min-w-0">
+                {% if kullanici %}
+                <header class="px-6 lg:px-10 py-6 border-b border-black/5 bg-white/55 backdrop-blur-sm">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-[11px] uppercase tracking-[0.28em] text-black/35 mb-2">Workspace</p>
+                            <h2 class="text-2xl font-bold tracking-tight text-ink">{% block baslik %}Eka AI Debugger{% endblock %}</h2>
+                        </div>
+                        <div class="hidden md:flex items-center gap-3">
+                            <div class="rounded-full border border-black/10 bg-white/80 px-4 py-2 text-xs font-medium text-black/55">Operational Console</div>
+                        </div>
+                    </div>
+                </header>
+                {% endif %}
+                <div class="flex-1 overflow-y-auto app-grid">
+                    <div class="p-5 lg:p-10">
+                        <div class="max-w-7xl mx-auto">
+                            {% block icerik %}{% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script>
+        hljs.highlightAll();
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar-link').forEach((link) => {
+            const href = link.getAttribute('href');
+            if (href && currentPath.startsWith(href) && (href !== '/pano' || currentPath === '/pano' || currentPath === '/')) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

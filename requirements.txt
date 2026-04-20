@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+jinja2
+sqlalchemy
+pymysql
+python-multipart
+passlib
+bcrypt<4.0.0
+python-jose[cryptography]
+pydantic
+pydantic-settings
+python-dotenv
+openai
+anthropic
+aiofiles
+httpx
+email-validator
